@@ -1,0 +1,236 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Amazon;
+using Amazon.S3;
+using Amazon.S3.Transfer;
+using HGT6.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using WebApi1.Models;
+using WebApi1.ViewModels;
+
+// For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+
+namespace WebApi1.Controllers
+{
+    public class LoginController : Controller
+    {
+        private const string bucketName = "hgtdata";
+        private static readonly RegionEndpoint bucketRegion = RegionEndpoint.APSoutheast1;
+        private IAmazonS3 s3Client;
+        private IConfiguration Configuration { get; }
+        private IServiceProvider services { get; }
+        private readonly IHostingEnvironment hostingEnvironment;
+
+        public LoginController(IAmazonS3 s3Client, IServiceProvider services, IHostingEnvironment hostingEnvironment, IConfiguration configuration)
+        {
+            this.s3Client = s3Client;
+            this.services = services;
+            Configuration = configuration;
+            this.hostingEnvironment = hostingEnvironment;
+        }
+
+        [HttpPost("[action]")]
+        public async Task<IActionResult> UploadFileToStore(IFormFile file)
+        {
+            string userEmail = HttpContext.GetUserEmail();
+            if (!String.IsNullOrEmpty(userEmail))
+            {
+                try
+                {
+                    var context = this.services.GetService(typeof(HGTDbContext)) as HGTDbContext;
+                    var user = context.HGTUsers.FirstOrDefault(x => x.Email == userEmail);
+                    if (user != null)
+                    {
+                        long size = file.Length;
+                        String ext = System.IO.Path.GetExtension(file.FileName);
+                        // Very immportant to check format here other anyone will upload anything
+                        var uniqueID = CreateUniqueVideoID();
+                        var fileAddress = $"{user.Id}_{ uniqueID}{ext}";
+                        return await UploadFileAsync(file, fileAddress);
+                    }
+                }
+                catch
+                {
+                    return Ok(new ServiceResponse { Status = "error", Message = "Something Went Wrong When Uploading The File" });
+                }
+            }
+
+            return Ok(new ServiceResponse { Status = "error", Message = "Something Went Wrong When Uploading The File" });
+        }
+
+        private async Task<IActionResult> UploadFileAsync(IFormFile file, string keyName)
+        {
+            try
+            {
+                var fileTransferUtility = new TransferUtility(this.s3Client);
+
+                var fileTransferUtilityRequest = new TransferUtilityUploadRequest
+                {
+                    BucketName = bucketName,
+                    InputStream = file.OpenReadStream(),
+                    StorageClass = S3StorageClass.Standard,
+                    //PartSize = 6291456, // 6 MB.
+                    Key = keyName,
+                    CannedACL = S3CannedACL.PublicRead
+                };
+
+
+                await fileTransferUtility.UploadAsync(fileTransferUtilityRequest);
+                return Ok(new ServiceResponse { Status = "success", Message = keyName });
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Unknown encountered on server. Message:'{0}' when writing an object", e.Message);
+                return Ok(new ServiceResponse { Status = "error", Message = "Something Went Wrong When Uploading The File" });
+            }
+
+        }
+
+
+        [AllowAnonymous]
+        [HttpPost("[action]")]
+        public async Task<IActionResult> Register([FromBody]RegisterViewModel model, string returnUrl = null)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var context = this.services.GetService(typeof(WebApiDBContext)) as WebApiDBContext;
+                    if (context.HGTUsers.FirstOrDefault(x => x.Email == model.Email) == null)
+                    {
+                        var hasher = new Hasher();
+                        var hashedPassword = hasher.HashPassword(model.Password);
+
+
+                        HGTUser newUser = new HGTUser
+                        {
+                            FirstName = model.FirstName,
+                            LastName = model.LastName,
+                            Email = model.Email,
+                            PasswordHash = hashedPassword.Hash,
+                            Salt = hashedPassword.Salt,
+                            Gender = model.Gender,
+                            District = model.District,
+                            Town = model.Town,
+                            Age = model.Age,
+                        };
+
+                        if (!String.IsNullOrEmpty(model.AvatarImage))
+                        {
+                            var startIndex = model.AvatarImage.IndexOf("base64,");
+                            var base64Image = model.AvatarImage.Substring(startIndex + 7);
+                            var index1 = model.AvatarImage.IndexOf('/');
+                            var index2 = model.AvatarImage.IndexOf(';');
+                            var ext = model.AvatarImage.Substring(index1 + 1, index2 - index1 - 1);
+                            model.Email = model.Email.Replace('.', '_');
+                            string path = $"{model.Email}.{ext}";
+                            if (!await UploadFileAsync(Convert.FromBase64String(base64Image), path))
+                            {
+                                return Ok(new ServiceResponse { Status = "error", Message = "Service Not Up" });
+                            }
+                            newUser.AvatarImage = $"https://s3.ap-south-1.amazonaws.com/{bucketName}/{path}";
+                        }
+
+                        if (context.Capthas.Single(x => x.Id == model.CapthaId).CapthaAnswer != model.Captha)
+                        {
+                            return Ok(new ServiceResponse { Status = "error", Message = "Captha Answer not Matched" });
+                        }
+
+                        context.HGTUsers.Add(newUser);
+                        context.SaveChanges();
+                        // Send the verification Mail
+                        // Login the User and send a token back
+                        return this.LoginUser(new LoginViewModel { Email = model.Email, Password = model.Password });
+                    }
+                    else
+                    {
+                        return Ok(new ServiceResponse { Status = "error", Message = "User Already Exists" });
+                    }
+                }
+                catch
+                {
+                    return Ok(new ServiceResponse { Status = "error", Message = "Somthing doesn't seems to work" });
+                }
+            }
+            else
+            {
+                var modelErrors = new StringBuilder();
+                foreach (var modelState in ModelState.Values)
+                {
+                    foreach (var modelError in modelState.Errors)
+                    {
+                        modelErrors.AppendLine(modelError.ErrorMessage);
+                    }
+                }
+
+                return Ok(new ServiceResponse { Status = "error", Message = modelErrors.ToString() });
+            }
+        }
+
+
+        [AllowAnonymous]
+        [HttpPost("[action]")]
+        public IActionResult Login([FromBody]LoginViewModel user)
+        {
+            return LoginUser(user);
+        }
+
+        private IActionResult LoginUser(LoginViewModel user)
+        {
+            bool succeeded = false;
+            var context = this.services.GetService(typeof(HGTDbContext)) as HGTDbContext;
+            var foundUser = context.HGTUsers.FirstOrDefault(x => x.Email == user.Email);
+            if (foundUser == null)
+                return Ok(new ServiceResponse { Status = "error", Message = "User not found!" });
+
+            if (!foundUser.IsVerified)
+            {
+                // Send The verification Mail
+            }
+
+            var hash = new HashedPassword(foundUser.PasswordHash, foundUser.Salt);
+            var hasher = new Hasher();
+            if (hasher.Check(user.Password, hash))
+                succeeded = true;
+            else return Ok(new ServiceResponse { Status = "error", Message = "Wrong Passwords!" });
+
+            if (succeeded)
+            {
+                var claims = new[]
+                {
+                              new Claim(ClaimTypes.Email, user.Email),
+                              new Claim(ClaimTypes.NameIdentifier, foundUser.Id)
+                        };
+
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["SecurityKey"]));
+                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+                var token = new JwtSecurityToken(
+                    issuer: Configuration["ValidIssuer"],
+                    audience: Configuration["ValidAudience"],
+                    claims: claims,
+                    expires: DateTime.Now.AddMinutes(30),
+                    signingCredentials: creds);
+
+                return Ok(new ServiceResponse { Status = "registerd", Message = new JwtSecurityTokenHandler().WriteToken(token) });
+            }
+            else
+            {
+                return Ok(new ServiceResponse { Status = "error", Message = "Could not verify username and password!" });
+            }
+        }
+
+
+        // GET: /<controller>/
+        public IActionResult Index()
+        {
+            return View();
+        }
+    }
+}

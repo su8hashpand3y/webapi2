@@ -1,7 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
+    <UserSecretsId>9a93a782-f73a-4ccd-8e0f-fa45c8f54588</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -9,11 +10,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="awssdk.extensions.netcore.setup" Version="3.3.6" />
+    <PackageReference Include="AWSSDK.S3" Version="3.3.18.5" />
+    <PackageReference Include="Hash" Version="2.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.8" />
   </ItemGroup>
 
   <ItemGroup>
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.4" />
+    <DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="2.0.0" />
   </ItemGroup>
 
 </Project>
