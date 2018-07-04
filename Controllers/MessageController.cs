@@ -247,8 +247,15 @@ namespace WebApi1.Controllers
         }
 
 
-        public ServiceResponse<string> MarkInboxAsFav(string messageGroupUniqueId,string userUniqueId)
+        public ServiceResponse<string> MarkInboxAsFav(string messageGroupUniqueId)
         {
+            string userUniqueId = HttpContext.GetUserUniqueID();
+            if (String.IsNullOrEmpty(userUniqueId))
+            {
+                return new ServiceResponse<string> { Status = "bad", Message = "User not logged in" };
+
+            }
+
             var context = this.services.GetService(typeof(WebApiDBContext)) as WebApiDBContext;
             var msg = context.UserMessage.SingleOrDefault(x => x.MessageGroupUniqueGuid.ToString() == messageGroupUniqueId && x.UserUniqueId == userUniqueId);
             if (msg != null)
@@ -256,6 +263,41 @@ namespace WebApi1.Controllers
                 msg.IsFav = true;
                 context.SaveChanges();
             }
+            return new ServiceResponse<string> { Status = "good" };
+        }
+
+        public ServiceResponse<string> MarkReplyAsFav(string messageGroupUniqueId)
+        {
+            string userUniqueId = HttpContext.GetUserUniqueID();
+            if (String.IsNullOrEmpty(userUniqueId))
+            {
+                return new ServiceResponse<string> { Status = "bad",Message="User not logged in" };
+
+            }
+
+            var context = this.services.GetService(typeof(WebApiDBContext)) as WebApiDBContext;
+            var msg = context.ReplyMessageInfo.SingleOrDefault(x => x.MessageGroupUniqueGuid.ToString() == messageGroupUniqueId && x.UserUniqueId == userUniqueId);
+            if (msg != null)
+            {
+                msg.IsFav = true;
+                context.SaveChanges();
+            }
+            return new ServiceResponse<string> { Status = "good" };
+        }
+
+        public ServiceResponse<string> AddToReplyInfo(string messageGroupUniqueId,bool isFav)
+        {
+            string userUniqueId = HttpContext.GetUserUniqueID();
+            if (String.IsNullOrEmpty(userUniqueId))
+            {
+                return new ServiceResponse<string> { Status = "bad", Message = "User not logged in" };
+
+            }
+
+            var context = this.services.GetService(typeof(WebApiDBContext)) as WebApiDBContext;
+            ReplyMessageInfo info = new ReplyMessageInfo { MessageGroupUniqueGuid = Guid.Parse(messageGroupUniqueId), UserUniqueId = userUniqueId, IsFav = isFav };
+            context.ReplyMessageInfo.Add(info);
+            context.SaveChanges();
             return new ServiceResponse<string> { Status = "good" };
         }
 
