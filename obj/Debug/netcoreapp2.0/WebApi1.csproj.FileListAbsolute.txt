@@ -10,3 +10,15 @@ C:\Users\subhasp\source\repos\WebApi1\WebApi1\obj\Debug\netcoreapp2.0\UserSecret
 C:\Users\subhasp\source\repos\WebApi1\WebApi1\bin\Debug\netcoreapp2.0\WebApi1.pdb
 C:\Users\subhasp\source\repos\WebApi1\WebApi1\obj\Debug\netcoreapp2.0\WebApi1.dll
 C:\Users\subhasp\source\repos\WebApi1\WebApi1\obj\Debug\netcoreapp2.0\WebApi1.pdb
+C:\Fortnite\webapi2\bin\Debug\netcoreapp2.0\WebApi1.deps.json
+C:\Fortnite\webapi2\bin\Debug\netcoreapp2.0\WebApi1.runtimeconfig.json
+C:\Fortnite\webapi2\bin\Debug\netcoreapp2.0\WebApi1.runtimeconfig.dev.json
+C:\Fortnite\webapi2\bin\Debug\netcoreapp2.0\WebApi1.dll
+C:\Fortnite\webapi2\bin\Debug\netcoreapp2.0\WebApi1.pdb
+C:\Fortnite\webapi2\obj\Debug\netcoreapp2.0\WebApi1.csproj.CoreCompileInputs.cache
+C:\Fortnite\webapi2\obj\Debug\netcoreapp2.0\UserSecretsAssemblyInfo.cs
+C:\Fortnite\webapi2\obj\Debug\netcoreapp2.0\WebApi1.AssemblyInfoInputs.cache
+C:\Fortnite\webapi2\obj\Debug\netcoreapp2.0\WebApi1.AssemblyInfo.cs
+C:\Fortnite\webapi2\obj\Debug\netcoreapp2.0\WebApi1.dll
+C:\Fortnite\webapi2\obj\Debug\netcoreapp2.0\WebApi1.pdb
+C:\Fortnite\webapi2\obj\Debug\netcoreapp2.0\WebApi1.csprojAssemblyReference.cache

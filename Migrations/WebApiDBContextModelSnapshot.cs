@@ -68,12 +68,36 @@ namespace WebApi1.Migrations
                     b.ToTable("Reply");
                 });
 
+            modelBuilder.Entity("WebApi1.Models.ReplyMessageInfo", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<bool>("IsDeleted");
+
+                    b.Property<bool>("IsFav");
+
+                    b.Property<Guid>("MessageGroupUniqueGuid");
+
+                    b.Property<string>("UserUniqueId");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ReplyMessageInfo");
+                });
+
             modelBuilder.Entity("WebApi1.Models.User", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<bool>("AnonymousNotAllowed");
+
+                    b.Property<string>("Ans1");
+
+                    b.Property<string>("Ans2");
+
+                    b.Property<string>("Ans3");
 
                     b.Property<string>("Name");
 
@@ -82,20 +106,6 @@ namespace WebApi1.Migrations
                     b.Property<string>("PhotoUrl");
 
                     b.Property<bool>("PublicSearchNotAvailable");
-
-                    b.Property<string>("Salt");
-
-                    b.Property<string>("SecurityAns1");
-
-                    b.Property<string>("SecurityAns2");
-
-                    b.Property<string>("SecurityAns3");
-
-                    b.Property<string>("SecurityQue1");
-
-                    b.Property<string>("SecurityQue2");
-
-                    b.Property<string>("SecurityQue3");
 
                     b.Property<string>("UserUniqueId");
 
@@ -110,6 +120,8 @@ namespace WebApi1.Migrations
                         .ValueGeneratedOnAdd();
 
                     b.Property<bool>("IsDeleted");
+
+                    b.Property<bool>("IsFav");
 
                     b.Property<Guid>("MessageGroupUniqueGuid");
 

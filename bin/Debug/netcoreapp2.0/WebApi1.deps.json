@@ -1,7 +1,7 @@
 {
   "runtimeTarget": {
     "name": ".NETCoreApp,Version=v2.0",
-    "signature": "28c0e9786b74bb4d84c4d4834d5ea041188b8a03"
+    "signature": "949c9401a20126bf324ffdd8320d1e964b3c58c7"
   },
   "compilationOptions": {
     "defines": [
@@ -24,7 +24,6 @@
       "WebApi1/1.0.0": {
         "dependencies": {
           "AWSSDK.S3": "3.3.18.5",
-          "Hash": "2.0.1",
           "Microsoft.AspNetCore.All": "2.0.8",
           "Microsoft.NETCore.App": "2.0.0",
           "AWSSDK.Extensions.NETCore.Setup": "3.3.6"
@@ -74,14 +73,6 @@
         },
         "compile": {
           "lib/netstandard1.3/AWSSDK.S3.dll": {}
-        }
-      },
-      "Hash/2.0.1": {
-        "runtime": {
-          "lib/Hash.dll": {}
-        },
-        "compile": {
-          "lib/Hash.dll": {}
         }
       },
       "Libuv/1.10.0": {
@@ -4085,13 +4076,6 @@
       "path": "awssdk.s3/3.3.18.5",
       "hashPath": "awssdk.s3.3.3.18.5.nupkg.sha512"
     },
-    "Hash/2.0.1": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-xuU4LKFSKyYSZEqt3gtO6I6qiY2vRhbl/DeIhPWkAcQxww2a/7nYOQVnegSDjHilwVs8WTuirpa+UqmNlnU33g==",
-      "path": "hash/2.0.1",
-      "hashPath": "hash.2.0.1.nupkg.sha512"
-    },
     "Libuv/1.10.0": {
       "type": "package",
       "serviceable": true,
@@ -5943,7 +5927,7 @@
     "System.Security.Cryptography.Xml/4.4.2": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-q9Dren/YP5jhRCkDvLfuaPpMTQzP97ANvzq/OoGgwK8YdLRSTABS9oW5/23OKoM2DRCuBrh4qaecD2YNhPtuzQ==",
+      "sha512": "sha512-1m+fKVrApgKYMRuE0MF0vGjqy4XqAp1rCtyAzMXhJajMDDytMh/rHk9hp4M7KKk3QQZoWJUvyUY7xcw74w+JiQ==",
       "path": "system.security.cryptography.xml/4.4.2",
       "hashPath": "system.security.cryptography.xml.4.4.2.nupkg.sha512"
     },

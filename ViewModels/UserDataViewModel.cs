@@ -8,6 +8,7 @@ namespace WebApi1.ViewModels
     public class UserDataViewModel
     {
         public string Name { get; set; }
-        public string PhotoUrl { get; set; }
+        public string UserImage { get; set; }
+        public string UserId { get; set; }
     }
 }

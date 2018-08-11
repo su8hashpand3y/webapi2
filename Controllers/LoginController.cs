@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
@@ -8,10 +9,10 @@ using System.Threading.Tasks;
 using Amazon;
 using Amazon.S3;
 using Amazon.S3.Transfer;
-using HashLibrary;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -41,16 +42,16 @@ namespace WebApi1.Controllers
 
        
 
-        private async Task<string> UploadFileAsync(IFormFile file, string keyName)
+        private async Task<string> UploadFileAsync(byte[] file, string keyName)
         {
             try
             {
                 var fileTransferUtility = new TransferUtility(this.s3Client);
-
+                Stream stream = new MemoryStream(file);
                 var fileTransferUtilityRequest = new TransferUtilityUploadRequest
                 {
                     BucketName = bucketName,
-                    InputStream = file.OpenReadStream(),
+                    InputStream = stream,
                     StorageClass = S3StorageClass.Standard,
                     Key = keyName,
                     CannedACL = S3CannedACL.PublicRead
@@ -59,7 +60,7 @@ namespace WebApi1.Controllers
 
                 await fileTransferUtility.UploadAsync(fileTransferUtilityRequest);
                 // append Full address here 
-                return $"https://s3.ap-south-1.amazonaws.com/{bucketName}/keyName";
+                return $"https://s3.ap-south-1.amazonaws.com/{bucketName}/{keyName}";
             }
             catch (Exception e)
             {
@@ -80,36 +81,39 @@ namespace WebApi1.Controllers
                     var context = this.services.GetService(typeof(WebApiDBContext)) as WebApiDBContext;
                     if (context.User.FirstOrDefault(x => x.UserUniqueId == model.UserUniqueId) == null)
                     {
-                        var hasher = new Hasher();
-                        var hashedPassword = hasher.HashPassword(model.Password);
+
 
 
                         User newUser = new User
                         {
-                            Name = model.Name,
-                            Password = hashedPassword.Hash,
-                            Salt = hashedPassword.Salt,
                             UserUniqueId = model.UserUniqueId,
+                            Name = model.Name
                         };
 
-                        if (model.Photo != null)
-                        {
+                        var hasher = new PasswordHasher<User>();
+                        var hashedPassword = hasher.HashPassword(newUser, model.Password);
+                        newUser.Password = hashedPassword;
                             try
                             {
-                                String ext = System.IO.Path.GetExtension(model.Photo.FileName);
-                                newUser.PhotoUrl = await this.UploadFileAsync(model.Photo, $"{model.UserUniqueId}{ext}");
+                                if (!String.IsNullOrEmpty(model.Photo))
+                                {
+                                    
+                                   
+                                    string path = $"{model.UserUniqueId}{model.Ext.Trim('\'')}";
+                                    newUser.PhotoUrl = await UploadFileAsync(Convert.FromBase64String(model.Photo), path);
+                                  
+                                }
                             }
                             catch { }
-                        }
 
 
                         context.User.Add(newUser);
                         context.SaveChanges();
-                        return this.LoginUser(new RegisterViewModel { UserUniqueId = model.UserUniqueId, Password = model.Password });
+                        return this.LoginUser(new LoginViewModel { UserUniqueId = model.UserUniqueId, Password = model.Password });
                     }
                     else
                     {
-                        return Ok(new ServiceResponse<string> { Status = "bad", Message = $"{model.UserUniqueId} is already taken!" });
+                        return Ok(new ServiceResponse<string> { Status = "bad", Message = $"User Id {model.UserUniqueId} is already taken!" });
                     }
                 }
                 catch
@@ -135,12 +139,12 @@ namespace WebApi1.Controllers
 
         [AllowAnonymous]
         [HttpPost()]
-        public IActionResult Login([FromBody]RegisterViewModel user)
+        public IActionResult Login([FromForm]LoginViewModel user)
         {
             return LoginUser(user);
         }
 
-        private IActionResult LoginUser(RegisterViewModel user)
+        private IActionResult LoginUser(LoginViewModel user)
         {
             bool succeeded = false;
             var context = this.services.GetService(typeof(WebApiDBContext)) as WebApiDBContext;
@@ -148,9 +152,8 @@ namespace WebApi1.Controllers
             if (foundUser == null)
                 return Ok(new ServiceResponse<string> { Status = "bad", Message = "User not found!" });
 
-            var hash = new HashedPassword(foundUser.Password, foundUser.Salt);
-            var hasher = new Hasher();
-            if (hasher.Check(user.Password, hash))
+            var hash = new PasswordHasher<User>();
+            if (hash.VerifyHashedPassword(foundUser, foundUser.Password, user.Password) == PasswordVerificationResult.Success)
                 succeeded = true;
             else return Ok(new ServiceResponse<string> { Status = "error", Message = "Wrong Password!" });
 
@@ -179,6 +182,13 @@ namespace WebApi1.Controllers
             }
         }
 
+        [Authorize]
+        [HttpGet()]
+        public IActionResult CheckAuthorization()
+        {
+            return Ok(new ServiceResponse<string> { Status = "good", Message = "Already Logged in" });
+        }
+
         [HttpGet()]
         public bool IsUpdateMandatory()
         {
@@ -186,14 +196,15 @@ namespace WebApi1.Controllers
         }
 
 
-       
+
+        [HttpGet()]
         public ServiceResponse<List<UserDataViewModel>> Search(string searchTerm,int skip)
         {
             try
             {
                 var context = this.services.GetService(typeof(WebApiDBContext)) as WebApiDBContext;
                 var matchingUser  = context.User.Where(x => x.Name.Contains(searchTerm) || x.UserUniqueId.Contains(searchTerm)).Skip(skip);
-                return new ServiceResponse<List<UserDataViewModel>> { Status = "good", Data = matchingUser.Select(x => new UserDataViewModel { Name = $"{x.Name}({x.UserUniqueId})", PhotoUrl = x.PhotoUrl }).ToList() };
+                return new ServiceResponse<List<UserDataViewModel>> { Status = "good", Data = matchingUser.Select(x => new UserDataViewModel { Name = x.Name,UserId =x.UserUniqueId, UserImage = x.PhotoUrl }).ToList() };
             }
             catch (Exception e)
             {

@@ -45,15 +45,6 @@
           "lib/netstandard1.3/AWSSDK.S3.dll": {}
         }
       },
-      "Hash/2.0.1": {
-        "type": "package",
-        "compile": {
-          "lib/Hash.dll": {}
-        },
-        "runtime": {
-          "lib/Hash.dll": {}
-        }
-      },
       "Libuv/1.10.0": {
         "type": "package",
         "dependencies": {
@@ -4934,18 +4925,6 @@
         "lib/uap/AWSSDK.S3.pdb",
         "tools/install.ps1",
         "tools/uninstall.ps1"
-      ]
-    },
-    "Hash/2.0.1": {
-      "sha512": "xuU4LKFSKyYSZEqt3gtO6I6qiY2vRhbl/DeIhPWkAcQxww2a/7nYOQVnegSDjHilwVs8WTuirpa+UqmNlnU33g==",
-      "type": "package",
-      "path": "hash/2.0.1",
-      "files": [
-        "hash.2.0.1.nupkg.sha512",
-        "hash.nuspec",
-        "lib/Hash.dll",
-        "lib/Hash.pdb",
-        "lib/Hash.xml"
       ]
     },
     "Libuv/1.10.0": {
@@ -11793,7 +11772,7 @@
       ]
     },
     "System.Security.Cryptography.Xml/4.4.2": {
-      "sha512": "q9Dren/YP5jhRCkDvLfuaPpMTQzP97ANvzq/OoGgwK8YdLRSTABS9oW5/23OKoM2DRCuBrh4qaecD2YNhPtuzQ==",
+      "sha512": "1m+fKVrApgKYMRuE0MF0vGjqy4XqAp1rCtyAzMXhJajMDDytMh/rHk9hp4M7KKk3QQZoWJUvyUY7xcw74w+JiQ==",
       "type": "package",
       "path": "system.security.cryptography.xml/4.4.2",
       "files": [
@@ -12974,7 +12953,6 @@
   "projectFileDependencyGroups": {
     ".NETCoreApp,Version=v2.0": [
       "AWSSDK.S3 >= 3.3.18.5",
-      "Hash >= 2.0.1",
       "Microsoft.AspNetCore.All >= 2.0.8",
       "Microsoft.NETCore.App >= 2.0.0",
       "awssdk.extensions.netcore.setup >= 3.3.6"
@@ -12987,11 +12965,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\subhasp\\source\\repos\\WebApi1\\WebApi1\\WebApi1.csproj",
+      "projectUniqueName": "C:\\Fortnite\\webapi2\\WebApi1.csproj",
       "projectName": "WebApi1",
-      "projectPath": "C:\\Users\\subhasp\\source\\repos\\WebApi1\\WebApi1\\WebApi1.csproj",
+      "projectPath": "C:\\Fortnite\\webapi2\\WebApi1.csproj",
       "packagesPath": "C:\\Users\\subhasp\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\subhasp\\source\\repos\\WebApi1\\WebApi1\\obj\\",
+      "outputPath": "C:\\Fortnite\\webapi2\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -13025,10 +13003,6 @@
             "target": "Package",
             "version": "[3.3.18.5, )"
           },
-          "Hash": {
-            "target": "Package",
-            "version": "[2.0.1, )"
-          },
           "Microsoft.AspNetCore.All": {
             "target": "Package",
             "version": "[2.0.8, )"
@@ -13050,17 +13024,5 @@
         "warn": true
       }
     }
-  },
-  "logs": [
-    {
-      "code": "NU1701",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Package 'Hash 2.0.1' was restored using '.NETFramework,Version=v4.6.1' instead of the project target framework '.NETCoreApp,Version=v2.0'. This package may not be fully compatible with your project.",
-      "libraryId": "Hash",
-      "targetGraphs": [
-        ".NETCoreApp,Version=v2.0"
-      ]
-    }
-  ]
+  }
 }

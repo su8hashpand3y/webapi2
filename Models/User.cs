@@ -12,14 +12,10 @@ namespace WebApi1.Models
         public string UserUniqueId { get; set; }
         public string PhotoUrl { get; set; }
         public string Password { get; set; }
-        public string Salt { get; set; }
         public bool AnonymousNotAllowed { get; set; }
         public bool PublicSearchNotAvailable { get; set; }
-        public string SecurityQue1 { get; set; }
-        public string SecurityAns1 { get; set; }
-        public string SecurityQue2 { get; set; }
-        public string SecurityAns2 { get; set; }
-        public string SecurityQue3 { get; set; }
-        public string SecurityAns3 { get; set; }
+        public string Ans1 { get; set; }
+        public string Ans2 { get; set; }
+        public string Ans3 { get; set; }
     }
 }

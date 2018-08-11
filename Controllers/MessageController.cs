@@ -119,42 +119,39 @@ namespace WebApi1.Controllers
             return new ServiceResponse<string>() { Status="good",Data= messageGroupUniqueId };
         }
 
-        public ServiceResponse<List<MessageCard>> GetReplyMessageCard(string[] messageGroupUniqueIds,int skip)
+        public ServiceResponse<List<MessageCard>> GetReplyMessageCard(int skip)
         {
-            var context = this.services.GetService(typeof(WebApiDBContext)) as WebApiDBContext;
             List<MessageCard> replyCards = new List<MessageCard>();
+
             try
             {
-                foreach (var messageGroupUniqueId in messageGroupUniqueIds)
+                var context = this.services.GetService(typeof(WebApiDBContext)) as WebApiDBContext;
+                var userUniqueId = HttpContext.GetUserUniqueID();
+                if (String.IsNullOrEmpty(userUniqueId))
                 {
-                    var userMessage = context.UserMessage.FirstOrDefault(x => x.MessageGroupUniqueGuid.ToString() == messageGroupUniqueId);
-                    if (userMessage == null)
-                    {
-                        continue;
-                    }
-                    if (userMessage.IsDeleted)
-                    {
-                        continue;
-                    }
+                    return new ServiceResponse<List<MessageCard>> { Status = "bad", Message = "You Are not logged in!" };
+                }
 
-                    var user = context.User.SingleOrDefault(x => x.UserUniqueId == userMessage.UserUniqueId);
-                    if (user == null)
-                    {
-                        continue;
-                    }
+                var user = context.User.SingleOrDefault(x => x.UserUniqueId == userUniqueId);
+                if (user == null)
+                {
+                    return new ServiceResponse<List<MessageCard>> { Status = "bad", Message = "The logged in user is not a valid user login again Please!" };
+                }
 
-                    var replies = context.Reply.Where(x => x.MessageGroupUniqueGuid.ToString() == messageGroupUniqueId);
 
-                    var card = new MessageCard {UserName = user.UserUniqueId,  MessageGroupUniqueGuid = messageGroupUniqueId, PhotoUrl = user.PhotoUrl, UnreadCount = replies.Count(y => y.IsRead == false), LastMessage = replies.Last().Message};
-                    replyCards.Add(card);
+
+                var msgs = context.Inbox.Where(x => x.UserUniqueId == userUniqueId && !x.IsDeleted).Skip(skip).GroupBy(x => x.MessageGroupUniqueGuid);
+
+                foreach (var msg in msgs)
+                {
+                    bool isFav = context.UserMessage.First(x => x.UserUniqueId == userUniqueId && x.MessageGroupUniqueGuid == msg.Key).IsFav;
+                    replyCards.Add(new MessageCard { UserName = "Anonymous", MessageGroupUniqueGuid = msg.Key.ToString(), UnreadCount = msg.Count(y => y.IsRead == false), LastMessage = msg.Last().Message, IsFav = isFav });
                 }
             }
-            catch
-            {
+            catch  { }
 
-            }
+            return new ServiceResponse<List<MessageCard>> { Status = "good", Data = replyCards };
 
-            return new ServiceResponse<List<MessageCard>> { Status = "good",  Data = replyCards };
         }
 
         public ServiceResponse<List<MessageCard>> GetInboxMessagesCard(int skip)
