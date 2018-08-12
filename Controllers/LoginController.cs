@@ -155,7 +155,7 @@ namespace WebApi1.Controllers
             var hash = new PasswordHasher<User>();
             if (hash.VerifyHashedPassword(foundUser, foundUser.Password, user.Password) == PasswordVerificationResult.Success)
                 succeeded = true;
-            else return Ok(new ServiceResponse<string> { Status = "error", Message = "Wrong Password!" });
+            else return Ok(new ServiceResponse<string> { Status = "bad", Message = "Wrong Password!" });
 
             if (succeeded)
             {
@@ -178,7 +178,7 @@ namespace WebApi1.Controllers
             }
             else
             {
-                return Ok(new ServiceResponse<string> { Status = "error", Message = "Could not verify username and password!" });
+                return Ok(new ServiceResponse<string> { Status = "bad", Message = "Could not verify username and password!" });
             }
         }
 

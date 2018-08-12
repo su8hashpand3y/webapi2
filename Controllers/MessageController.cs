@@ -25,14 +25,30 @@ namespace WebApi1.Controllers
         {
             try
             {
+                bool isReply = false;
                 var context = this.services.GetService(typeof(WebApiDBContext)) as WebApiDBContext;
+                if (!string.IsNullOrEmpty(messageGroupUniqueId) && String.IsNullOrEmpty(userUniqueId))
+                {
+                    var userMessage = context.UserMessage.FirstOrDefault(x => x.MessageGroupUniqueGuid.ToString() == messageGroupUniqueId);
+                    if (userMessage == null)
+                    {
+                        return new ServiceResponse<string> { Status = "bad", Message = "No Such Message Group Exists!" };
+                    }
+                    else
+                    {
+                        userUniqueId = userMessage.UserUniqueId;
+                        isReply = true;
+                    }
+                }
+
+
                 var user = context.User.FirstOrDefault(x => x.UserUniqueId == userUniqueId);
                 if(user == null)
                 {
                     return new ServiceResponse<string> { Status="bad",Message="No Such User Exists,Probably Wrong link to send message!"};
                 }
 
-                if(String.IsNullOrEmpty(HttpContext.GetUserUniqueID()) && user.AnonymousNotAllowed)
+                if(String.IsNullOrEmpty(HttpContext.GetUserUniqueID())  && user.AnonymousNotAllowed)
                 {
                     return new ServiceResponse<string> { Status = "bad", Message = $"Login first, anonymous user cant message to {userUniqueId} account" };
                 }
@@ -42,7 +58,7 @@ namespace WebApi1.Controllers
                 {
                     msg.MessageGroupUniqueGuid = Guid.NewGuid();
                     UserMessage um = new UserMessage { UserUniqueId = userUniqueId, MessageGroupUniqueGuid = msg.MessageGroupUniqueGuid };
-                    context.Add(um);
+                    context.UserMessage.Add(um);
                 }
                 else
                 {
@@ -52,7 +68,7 @@ namespace WebApi1.Controllers
                 msg.UserUniqueId = userUniqueId;
                 msg.Message = message;
                 Random rand = new Random();
-                if (string.IsNullOrEmpty(messageGroupUniqueId))
+                if (string.IsNullOrEmpty(yourName))
                 {
                     msg.UserIdentifier = yourName ?? $"Anonyms {rand.Next(100, 500)}";
                 }
@@ -60,15 +76,36 @@ namespace WebApi1.Controllers
                 context.Inbox.Add(msg);
 
 
-
-                Reply rep = new Reply
+                if (!isReply)
                 {
-                    MessageGroupUniqueGuid = msg.MessageGroupUniqueGuid,
-                    Message = message,
-                    IsMyMessage = true
-                };
+                    Reply rep = new Reply
+                    {
+                        UserUniqueId = HttpContext.GetUserUniqueID(),
+                        MessageGroupUniqueGuid = msg.MessageGroupUniqueGuid,
+                        Message = message,
+                        IsMyMessage = true
+                    };
+                    var ur = new UserReply { UserUniqueId = HttpContext.GetUserUniqueID(), MessageGroupUniqueGuid = msg.MessageGroupUniqueGuid };
 
-                context.Reply.Add(rep);
+                    context.UserReply.Add(ur);
+                    context.Reply.Add(rep);
+                }
+                else
+                {
+                    var userReply = context.UserReply.FirstOrDefault(x => x.MessageGroupUniqueGuid.ToString() == messageGroupUniqueId);
+                    if (userReply == null)
+                    {
+                        return new ServiceResponse<string> { Status = "bad", Message = "No Such Message Group Exists!" };
+                    }
+
+                    Reply rep = new Reply
+                    {
+                        UserUniqueId = userReply.UserUniqueId,
+                        MessageGroupUniqueGuid = msg.MessageGroupUniqueGuid,
+                        Message = message,
+                    };
+                    context.Reply.Add(rep);
+                }
 
                 context.SaveChanges();
 
@@ -89,7 +126,14 @@ namespace WebApi1.Controllers
             {
                 return new ServiceResponse<string> { Status = "bad", Message = "No Such Message Group Exists!" };
             }
-            if(userMessage.IsDeleted)
+
+            var userReply = context.UserReply.FirstOrDefault(x => x.MessageGroupUniqueGuid.ToString() == messageGroupUniqueId);
+            if (userReply == null)
+            {
+                return new ServiceResponse<string> { Status = "bad", Message = "No Such Message Group Exists!" };
+            }
+
+            if (userMessage.IsDeleted)
             {
                 return new ServiceResponse<string> { Status = "bad", Message = "Message Group deleted No More Replies Allowed!" };
             }
@@ -100,8 +144,7 @@ namespace WebApi1.Controllers
             {
                 MessageGroupUniqueGuid = Guid.Parse(messageGroupUniqueId),
                 Message = message,
-                IsMyMessage = true,
-                UserUniqueId = HttpContext.GetUserUniqueID()
+                UserUniqueId = userMessage.UserUniqueId
             };
 
             context.Inbox.Add(msg);
@@ -110,6 +153,8 @@ namespace WebApi1.Controllers
             {
                 MessageGroupUniqueGuid = Guid.Parse(messageGroupUniqueId),
                 Message = message,
+                IsMyMessage = true,
+                UserUniqueId = HttpContext.GetUserUniqueID()
             };
 
             context.Reply.Add(rep);
@@ -140,15 +185,17 @@ namespace WebApi1.Controllers
 
 
 
-                var msgs = context.Inbox.Where(x => x.UserUniqueId == userUniqueId && !x.IsDeleted).Skip(skip).GroupBy(x => x.MessageGroupUniqueGuid);
+                var msgs = context.Reply.Where(x => x.UserUniqueId == userUniqueId && !x.IsDeleted).Skip(skip).GroupBy(x => x.MessageGroupUniqueGuid);
 
                 foreach (var msg in msgs)
                 {
-                    bool isFav = context.UserMessage.First(x => x.UserUniqueId == userUniqueId && x.MessageGroupUniqueGuid == msg.Key).IsFav;
+                    bool isFav = context.UserReply.First(x => x.UserUniqueId == userUniqueId && x.MessageGroupUniqueGuid == msg.Key).IsFav;
                     replyCards.Add(new MessageCard { UserName = "Anonymous", MessageGroupUniqueGuid = msg.Key.ToString(), UnreadCount = msg.Count(y => y.IsRead == false), LastMessage = msg.Last().Message, IsFav = isFav });
                 }
             }
-            catch  { }
+            catch(Exception e)
+            {
+            }
 
             return new ServiceResponse<List<MessageCard>> { Status = "good", Data = replyCards };
 

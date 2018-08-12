@@ -11,9 +11,10 @@ using WebApi1.Models;
 namespace WebApi1.Migrations
 {
     [DbContext(typeof(WebApiDBContext))]
-    partial class WebApiDBContextModelSnapshot : ModelSnapshot
+    [Migration("20180812112722_k6")]
+    partial class k6
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -132,24 +133,6 @@ namespace WebApi1.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("UserMessage");
-                });
-
-            modelBuilder.Entity("WebApi1.Models.UserReply", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<bool>("IsDeleted");
-
-                    b.Property<bool>("IsFav");
-
-                    b.Property<Guid>("MessageGroupUniqueGuid");
-
-                    b.Property<string>("UserUniqueId");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("UserReply");
                 });
 #pragma warning restore 612, 618
         }

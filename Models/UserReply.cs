@@ -5,21 +5,12 @@ using System.Threading.Tasks;
 
 namespace WebApi1.Models
 {
-    public class Reply
+    public class UserReply
     {
-        public Reply()
-        {
-            DateTime = DateTime.Now;
-        }
         public long Id { get; set; }
         public Guid MessageGroupUniqueGuid { get; set; }
         public string UserUniqueId { get; set; }
-
-        public string Message { get; set; }
+        public bool IsFav { get; set; }
         public bool IsDeleted { get; set; }
-        public bool IsRead { get; set; }
-        public bool IsMyMessage { get; set; }
-        public DateTime DateTime { get; set; }
-
     }
 }
