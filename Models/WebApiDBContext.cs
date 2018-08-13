@@ -14,7 +14,7 @@ namespace WebApi1.Models
         public DbSet<Reply> Reply { get; set; }
         public DbSet<UserMessage> UserMessage { get; set; }
         public DbSet<UserReply> UserReply { get; set; }
-        public DbSet<ReplyMessageInfo> ReplyMessageInfo { get; set; }
+        //
         public DbSet<User> User { get; set; }
     }
 }

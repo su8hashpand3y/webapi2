@@ -11,5 +11,7 @@ namespace WebApi1.ViewModels
         public string Message { get; set; }
         public bool IsMyMessage { get; set; }
         public DateTime DateTime { get; set; }
+        public long LastId { get; set; }
+
     }
 }

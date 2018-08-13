@@ -7,7 +7,7 @@ namespace WebApi1.ViewModels
 {
     public class MessageCard
     {
-        public string PhotoUrl { get; set; }
+        public long LastId { get; set; }
         public int UnreadCount { get; set; }
         public string LastMessage { get; set; }
         public string UserName { get; set; }
