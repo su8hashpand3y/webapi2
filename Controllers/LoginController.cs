@@ -87,7 +87,10 @@ namespace WebApi1.Controllers
                         User newUser = new User
                         {
                             UserUniqueId = model.UserUniqueId,
-                            Name = model.Name
+                            Name = model.Name,
+                            FavColor = model.FavColor,
+                            FavMonth = model.FavMonth,
+                            FavNumber = model.FavNumber
                         };
 
                         var hasher = new PasswordHasher<User>();
@@ -139,6 +142,38 @@ namespace WebApi1.Controllers
 
         [AllowAnonymous]
         [HttpPost()]
+        public IActionResult Forget(RegisterViewModel model)
+        {
+                try
+                {
+                    var context = this.services.GetService(typeof(WebApiDBContext)) as WebApiDBContext;
+                    var user = context.User.FirstOrDefault(x => x.UserUniqueId == model.UserUniqueId);
+                        var hasher = new PasswordHasher<User>();
+                        var hashedPassword = hasher.HashPassword(user, model.Password);
+                        user.Password = hashedPassword;
+                    if (model.FavColor.Equals(user.FavColor,StringComparison.InvariantCultureIgnoreCase) 
+                    && model.FavMonth.Equals(user.FavMonth, StringComparison.InvariantCultureIgnoreCase)
+                    && model.FavNumber.Equals(user.FavNumber, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        context.User.Add(user);
+                        context.SaveChanges();
+                        return this.LoginUser(new LoginViewModel { UserUniqueId = model.UserUniqueId, Password = model.Password });
+                    }
+                    else
+                    {
+                        return Ok(new ServiceResponse<string> { Status = "bad", Message = "Your Answer do not match "});
+                    }
+
+                }
+                catch
+                {
+                    return Ok(new ServiceResponse<string> { Status = "bad", Message = "Somthing doesn't seems to work" });
+                }
+        }
+
+
+        [AllowAnonymous]
+        [HttpPost()]
         public IActionResult Login([FromForm]LoginViewModel user)
         {
             return LoginUser(user);
@@ -148,7 +183,7 @@ namespace WebApi1.Controllers
         {
             bool succeeded = false;
             var context = this.services.GetService(typeof(WebApiDBContext)) as WebApiDBContext;
-            var foundUser = context.User.FirstOrDefault(x => x.UserUniqueId == user.UserUniqueId);
+            var foundUser = context.User.FirstOrDefault(x => x.UserUniqueId.Equals(user.UserUniqueId, StringComparison.InvariantCultureIgnoreCase));
             if (foundUser == null)
                 return Ok(new ServiceResponse<string> { Status = "bad", Message = "User not found!" });
 

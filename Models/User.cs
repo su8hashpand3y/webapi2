@@ -14,8 +14,8 @@ namespace WebApi1.Models
         public string Password { get; set; }
         public bool AnonymousNotAllowed { get; set; }
         public bool PublicSearchNotAvailable { get; set; }
-        public string Ans1 { get; set; }
-        public string Ans2 { get; set; }
-        public string Ans3 { get; set; }
+        public string FavColor { get; set; }
+        public string FavMonth { get; set; }
+        public string FavNumber { get; set; }
     }
 }
