@@ -67,8 +67,9 @@ namespace WebApi1.Controllers
 
                 msg.UserUniqueId = userUniqueId;
                 msg.Message = message;
+                msg.IsMyMessage = isReply;
                 Random rand = new Random();
-                if (string.IsNullOrEmpty(yourName))
+                if (string.IsNullOrEmpty(yourName) && !isReply)
                 {
                     msg.UserIdentifier = yourName ?? $"Anonyms {rand.Next(100, 500)}";
                 }
@@ -190,14 +191,15 @@ namespace WebApi1.Controllers
                 {
                     var userMessage = context.UserMessage.FirstOrDefault(x => x.MessageGroupUniqueGuid.ToString() == msg.Key.ToString());
                     bool isFav = context.UserReply.First(x => x.UserUniqueId == userUniqueId && x.MessageGroupUniqueGuid == msg.Key).IsFav;
-                    replyCards.Add(new MessageCard { LastId = msgs.Last().Id,UserName = userMessage?.UserUniqueId, MessageGroupUniqueGuid = msg.Key.ToString(), UnreadCount = msg.Count(y => y.IsRead == false), LastMessage = msg.Last().Message, IsFav = isFav });
+                    replyCards.Add(new MessageCard { LastId = msgs.Last().Id,UserName = userMessage?.UserUniqueId, MessageGroupUniqueGuid = msg.Key.ToString(), UnreadCount = msg.Count(y => y.IsRead == false),
+                        LastMessage = msg.Any(x => x.IsRead = false) ? msg.First(x=>x.IsRead = false).Message : msg.Last().Message, IsFav = isFav });
                 }
             }
             catch(Exception e)
             {
             }
 
-            return new ServiceResponse<List<MessageCard>> { Status = "good", Data = replyCards.OrderBy(x=> !x.IsFav).ToList() };
+            return new ServiceResponse<List<MessageCard>> { Status = "good", Data = replyCards.OrderBy(x=> !x.IsFav).ThenBy(x => x.UnreadCount).ToList() };
 
         }
 
@@ -224,10 +226,12 @@ namespace WebApi1.Controllers
             foreach (var msg in msgs.GroupBy(x => x.MessageGroupUniqueGuid))
             {
                 bool isFav = context.UserMessage.First(x => x.UserUniqueId == userUniqueId && x.MessageGroupUniqueGuid == msg.Key).IsFav;
-                inboxCards.Add(new MessageCard { LastId = msgs.Last().Id, UserName = msg.First().UserIdentifier , MessageGroupUniqueGuid = msg.Key.ToString(),  UnreadCount = msg.Count(y => y.IsRead == false), LastMessage = msg.Last().Message ,IsFav =  isFav} );
+                inboxCards.Add(new MessageCard { LastId = msgs.Last().Id, UserName = msg.First().UserIdentifier , MessageGroupUniqueGuid = msg.Key.ToString(),  UnreadCount = msg.Count(y => y.IsRead == false),
+                    LastMessage = msg.Any(x => x.IsRead = false) ? msg.First(x => x.IsRead = false).Message : msg.Last().Message,
+                    IsFav =  isFav} );
             }
 
-            return new ServiceResponse<List<MessageCard>> { Status = "good", Data = inboxCards.OrderBy(x => !x.IsFav).ToList() };
+            return new ServiceResponse<List<MessageCard>> { Status = "good", Data = inboxCards.OrderBy(x => !x.IsFav).ThenBy(x=>x.UnreadCount).ToList() };
         }
 
         public ServiceResponse<List<InboxViewModel>> GetInboxMessage(string messageGroupUniqueId,long lastId)
@@ -239,7 +243,7 @@ namespace WebApi1.Controllers
                 return new ServiceResponse<List<InboxViewModel>> { Status = "bad", Message = "You Are not logged in!" };
             }
 
-            var msgs = context.Inbox.Where(x => x.UserUniqueId == userUniqueId && !x.IsDeleted && x.MessageGroupUniqueGuid.ToString() == messageGroupUniqueId && x.Id > lastId);
+            var msgs = context.Inbox.Where(x => x.UserUniqueId == userUniqueId && !x.IsDeleted && x.MessageGroupUniqueGuid.ToString() == messageGroupUniqueId && x.Id > lastId).OrderBy(x=>x.Id);
             var inboxMessage = new List<InboxViewModel>();
             foreach (var msg in msgs)
             {
@@ -260,7 +264,7 @@ namespace WebApi1.Controllers
                 return new ServiceResponse<List<ReplyViewModel>> { Status = "bad", Message = "You Are not logged in!" };
             }
 
-            var msgs = context.Reply.Where(x => x.UserUniqueId == userUniqueId && !x.IsDeleted && x.MessageGroupUniqueGuid.ToString() == messageGroupUniqueId && x.Id > lastId);
+            var msgs = context.Reply.Where(x => x.UserUniqueId == userUniqueId && !x.IsDeleted && x.MessageGroupUniqueGuid.ToString() == messageGroupUniqueId && x.Id > lastId).OrderBy(x => x.Id);
             var replyMessages = new List<ReplyViewModel>();
             foreach (var msg in msgs)
             {

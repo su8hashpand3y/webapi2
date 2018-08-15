@@ -19,13 +19,12 @@ using Microsoft.IdentityModel.Tokens;
 using WebApi1.Models;
 using WebApi1.ViewModels;
 
-// For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace WebApi1.Controllers
 {
     public class LoginController : Controller
     {
-        private const string bucketName = "hgtdata";
+        private const string bucketName = "rajdoot";
         private static readonly RegionEndpoint bucketRegion = RegionEndpoint.APSoutheast1;
         private IAmazonS3 s3Client;
         private IConfiguration Configuration { get; }
@@ -221,13 +220,13 @@ namespace WebApi1.Controllers
         [HttpGet()]
         public IActionResult CheckAuthorization()
         {
-            return Ok(new ServiceResponse<string> { Status = "good", Message = "Already Logged in" });
+            return Boolean.Parse(Configuration["IsUpdateRequired"]) ? Ok(new ServiceResponse<string> { Status = "bad", Message = "App Update Needed" }): Ok(new ServiceResponse<string> { Status = "good", Message = "Already Logged in" });
         }
 
         [HttpGet()]
-        public bool IsUpdateMandatory()
+        public IActionResult IsUpdateMandatory()
         {
-            return false;
+            return Boolean.Parse(Configuration["IsUpdateRequired"]) ? Ok(new ServiceResponse<string> { Status = "good", Message = "App Update Needed" }) : Ok(new ServiceResponse<string> { Status = "bad", Message = "App Update Needed" });
         }
 
 

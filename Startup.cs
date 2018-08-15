@@ -36,8 +36,11 @@ namespace WebApi1
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var MYPS = $"User ID={Environment.GetEnvironmentVariable("CID")};Password={Environment.GetEnvironmentVariable("CPASS")};Host=rajdoot.csftqsjshidx.ap-south-1.rds.amazonaws.com;Port=5432;Database=rajdoot;Pooling=true;";
             services.AddDbContext<WebApiDBContext>(options =>
-            options.UseSqlServer(Configuration.GetConnectionString("WebApiDB")));
+            options.UseNpgsql(MYPS));
+            //options.UseSqlServer(Configuration.GetConnectionString("WebApiDB")
+            //    ));
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
            .AddJwtBearer(options =>
