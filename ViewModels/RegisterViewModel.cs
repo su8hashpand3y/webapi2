@@ -10,7 +10,7 @@ namespace WebApi1.ViewModels
     public class RegisterViewModel
     {
         [Required]
-        [MinLength(4,ErrorMessage ="Hey,UserId Length is alteast 4 letters")]
+        [MinLength(4,ErrorMessage ="Hey,UserId must have alteast 4 letters")]
         public string UserUniqueId { get; set; }
         [Required]
         public string Name { get; set; }

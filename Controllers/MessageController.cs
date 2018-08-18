@@ -199,7 +199,7 @@ namespace WebApi1.Controllers
             {
             }
 
-            return new ServiceResponse<List<MessageCard>> { Status = "good", Data = replyCards.OrderBy(x=> !x.IsFav).ThenBy(x => x.UnreadCount).ToList() };
+            return new ServiceResponse<List<MessageCard>> { Status = "good", Data = replyCards.OrderByDescending(x=> x.IsFav).ThenByDescending(x => x.UnreadCount).ToList() };
 
         }
 
@@ -231,7 +231,7 @@ namespace WebApi1.Controllers
                     IsFav =  isFav} );
             }
 
-            return new ServiceResponse<List<MessageCard>> { Status = "good", Data = inboxCards.OrderBy(x => !x.IsFav).ThenBy(x=>x.UnreadCount).ToList() };
+            return new ServiceResponse<List<MessageCard>> { Status = "good", Data = inboxCards.OrderByDescending(x => x.IsFav).ThenByDescending(x=>x.UnreadCount).ToList() };
         }
 
         public ServiceResponse<List<InboxViewModel>> GetInboxMessage(string messageGroupUniqueId,long lastId)
@@ -248,7 +248,7 @@ namespace WebApi1.Controllers
             foreach (var msg in msgs)
             {
                 msg.IsRead = true;
-                inboxMessage.Add(new InboxViewModel { DateTime = msg.DateTime, IsMyMessage = msg.IsMyMessage, Message = msg.Message,LastId = msgs.Last().Id});
+                inboxMessage.Add(new InboxViewModel { Id = msg.Id, DateTime = msg.DateTime, IsMyMessage = msg.IsMyMessage, Message = msg.Message,LastId = msgs.Last().Id});
             }
 
             context.SaveChanges();
@@ -264,16 +264,19 @@ namespace WebApi1.Controllers
                 return new ServiceResponse<List<ReplyViewModel>> { Status = "bad", Message = "You Are not logged in!" };
             }
 
-            var msgs = context.Reply.Where(x => x.UserUniqueId == userUniqueId && !x.IsDeleted && x.MessageGroupUniqueGuid.ToString() == messageGroupUniqueId && x.Id > lastId).OrderBy(x => x.Id);
             var replyMessages = new List<ReplyViewModel>();
-            foreach (var msg in msgs)
+            if (!String.IsNullOrEmpty(messageGroupUniqueId))
             {
-                msg.IsRead = true;
-                replyMessages.Add(new ReplyViewModel { DateTime = msg.DateTime, IsMyMessage = msg.IsMyMessage, Message = msg.Message, LastId = msgs.Last().Id });
+                var msgs = context.Reply.Where(x => x.UserUniqueId == userUniqueId && !x.IsDeleted && x.MessageGroupUniqueGuid.ToString() == messageGroupUniqueId && x.Id > lastId).OrderBy(x => x.Id);
+                foreach (var msg in msgs)
+                {
+                    msg.IsRead = true;
+                    replyMessages.Add(new ReplyViewModel { Id = msg.Id, DateTime = msg.DateTime, IsMyMessage = msg.IsMyMessage, Message = msg.Message, LastId = msgs.Last().Id });
 
+                }
+
+                context.SaveChanges();
             }
-
-            context.SaveChanges();
             return new ServiceResponse<List<ReplyViewModel>> { Status = "good", Data = replyMessages };
         }
 
@@ -380,24 +383,24 @@ namespace WebApi1.Controllers
         //    return new ServiceResponse<string> { Status = "good" };
         //}
 
-        public ServiceResponse<List<Tuple<string, int>>> GetInboxMessageCount()
+        public ServiceResponse<List<Tuple<string, int,string>>> GetInboxMessageCount()
         {
             var context = this.services.GetService(typeof(WebApiDBContext)) as WebApiDBContext;
             var userId = HttpContext.GetUserUniqueID();
             var data = context.Inbox.Where(x => x.UserUniqueId == userId && x.IsMyMessage == false && x.IsRead == false).GroupBy(x=>x.MessageGroupUniqueGuid).ToList();
-            List<Tuple<string, int>> result = new List<Tuple<string, int>>();
-            data.ForEach(x => result.Add(new Tuple<string, int>(x.Key.ToString(), x.Count())));
-            return new ServiceResponse<List<Tuple<string, int>>> { Status = "good", Data = result };
+            List<Tuple<string, int, string>> result = new List<Tuple<string, int, string>>();
+            data.ForEach(x => result.Add(new Tuple<string, int, string>(x.Key.ToString(), x.Count(), x.Any(y => !y.IsRead) ? x.First(y => !y.IsRead).Message : x.Last().Message)));
+            return new ServiceResponse<List<Tuple<string, int,string>>> { Status = "good", Data = result };
         }
 
-        public ServiceResponse<List<Tuple<string, int>>> GetReplyMessageCount()
+        public ServiceResponse<List<Tuple<string, int,string>>> GetReplyMessageCount()
         {
             var context = this.services.GetService(typeof(WebApiDBContext)) as WebApiDBContext;
             var userId = HttpContext.GetUserUniqueID();
             var data = context.Reply.Where(x => x.UserUniqueId == userId && x.IsMyMessage == false && x.IsRead == false).GroupBy(x => x.MessageGroupUniqueGuid).ToList();
-            List<Tuple<string, int>> result = new List<Tuple<string, int>>();
-            data.ForEach(x => result.Add(new Tuple<string, int>(x.Key.ToString(), x.Count())));
-            return new ServiceResponse<List<Tuple<string, int>>> { Status = "good", Data = result };
+            List<Tuple<string, int,string>> result = new List<Tuple<string, int,string>>();
+            data.ForEach(x => result.Add(new Tuple<string, int,string>(x.Key.ToString(), x.Count(),x.Any(y=>!y.IsRead) ? x.First(y=>!y.IsRead).Message :  x.Last().Message)));
+            return new ServiceResponse<List<Tuple<string, int,string>>> { Status = "good", Data = result };
         }
 
 

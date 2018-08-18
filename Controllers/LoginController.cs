@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using WebApi1.Helpers;
 using WebApi1.Models;
 using WebApi1.ViewModels;
 
@@ -216,11 +217,11 @@ namespace WebApi1.Controllers
             }
         }
 
-        [Authorize]
         [HttpGet()]
         public IActionResult CheckAuthorization()
         {
-            return Boolean.Parse(Configuration["IsUpdateRequired"]) ? Ok(new ServiceResponse<string> { Status = "bad", Message = "App Update Needed" }): Ok(new ServiceResponse<string> { Status = "good", Message = "Already Logged in" });
+            var userId = HttpContext.GetUserUniqueID();
+            return String.IsNullOrEmpty(userId) ? Ok(new ServiceResponse<string> { Status = "bad", Message = "App Update Needed" }): Ok(new ServiceResponse<string> { Status = "good", Message = "Already Logged in" });
         }
 
         [HttpGet()]
@@ -236,9 +237,18 @@ namespace WebApi1.Controllers
         {
             try
             {
-                var context = this.services.GetService(typeof(WebApiDBContext)) as WebApiDBContext;
-                var matchingUser  = context.User.Where(x => x.Name.Contains(searchTerm) || x.UserUniqueId.Contains(searchTerm)).Skip(skip);
-                return new ServiceResponse<List<UserDataViewModel>> { Status = "good", Data = matchingUser.Select(x => new UserDataViewModel { Name = x.Name,UserId =x.UserUniqueId, UserImage = x.PhotoUrl }).ToList() };
+                var userId = HttpContext.GetUserUniqueID();
+                List<UserDataViewModel> result = new List<UserDataViewModel>();
+                if (!String.IsNullOrEmpty(userId))
+                {
+                    var context = this.services.GetService(typeof(WebApiDBContext)) as WebApiDBContext;
+                    //var fullMactchUser = context.User.Where(x => x.Name == searchTerm || x.UserUniqueId == searchTerm).Skip(skip);
+                    //result.AddRange(fullMactchUser.Select(x => new UserDataViewModel { Name = x.Name, UserId = x.UserUniqueId, UserImage = x.PhotoUrl }).ToList());
+                    var matchingUser = context.User.Where(x => x.Name.Contains(searchTerm) || x.UserUniqueId.Contains(searchTerm)).Skip(skip);
+                    result.AddRange(matchingUser.Select(x => new UserDataViewModel { Name = x.Name, UserId = x.UserUniqueId, UserImage = x.PhotoUrl }).ToList());
+                }
+
+                return new ServiceResponse<List<UserDataViewModel>> { Status = "good", Data = result.ToList() };
             }
             catch (Exception e)
             {

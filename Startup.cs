@@ -38,9 +38,9 @@ namespace WebApi1
         {
             var MYPS = $"User ID={Environment.GetEnvironmentVariable("CID")};Password={Environment.GetEnvironmentVariable("CPASS")};Host=rajdoot.csftqsjshidx.ap-south-1.rds.amazonaws.com;Port=5432;Database=rajdoot;Pooling=true;";
             services.AddDbContext<WebApiDBContext>(options =>
-            options.UseNpgsql(MYPS));
-            //options.UseSqlServer(Configuration.GetConnectionString("WebApiDB")
-            //    ));
+            //options.UseNpgsql(MYPS));
+            options.UseSqlServer(Configuration.GetConnectionString("WebApiDB")
+                ));
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
            .AddJwtBearer(options =>
