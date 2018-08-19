@@ -16,7 +16,7 @@ namespace WebApi1.Models
 
         public string Message { get; set; }
         public string UserUniqueId { get; set; }
-        public string UserIdentifier { get; set; } = "Anonymous";
+        public string UserIdentifier { get; set; } 
         public bool IsDeleted { get; set; }
         public bool IsRead { get; set; }
         public bool IsMyMessage { get; set; }

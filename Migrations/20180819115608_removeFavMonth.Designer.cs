@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WebApi1.Models;
 
 namespace WebApi1.Migrations
 {
     [DbContext(typeof(WebApiDBContext))]
-    partial class WebApiDBContextModelSnapshot : ModelSnapshot
+    [Migration("20180819115608_removeFavMonth")]
+    partial class removeFavMonth
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

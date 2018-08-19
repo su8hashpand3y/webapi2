@@ -21,8 +21,6 @@ namespace WebApi1.ViewModels
         public string FavNumber { get; set; }
         [Required]
         public string FavColor { get; set; }
-        [Required]
-        public string FavMonth { get; set; }
         public string Ext { get; set; }
     }
 }

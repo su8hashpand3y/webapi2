@@ -89,7 +89,6 @@ namespace WebApi1.Controllers
                             UserUniqueId = model.UserUniqueId,
                             Name = model.Name,
                             FavColor = model.FavColor,
-                            FavMonth = model.FavMonth,
                             FavNumber = model.FavNumber
                         };
 
@@ -152,7 +151,6 @@ namespace WebApi1.Controllers
                         var hashedPassword = hasher.HashPassword(user, model.Password);
                         user.Password = hashedPassword;
                     if (model.FavColor.Equals(user.FavColor,StringComparison.InvariantCultureIgnoreCase) 
-                    && model.FavMonth.Equals(user.FavMonth, StringComparison.InvariantCultureIgnoreCase)
                     && model.FavNumber.Equals(user.FavNumber, StringComparison.InvariantCultureIgnoreCase))
                     {
                         context.User.Add(user);
