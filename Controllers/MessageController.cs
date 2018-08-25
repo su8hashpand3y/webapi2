@@ -71,7 +71,15 @@ namespace WebApi1.Controllers
                 Random rand = new Random();
                 if (string.IsNullOrEmpty(yourName) && !isReply)
                 {
-                    msg.UserIdentifier = yourName ?? $"Anonyms {rand.Next(100, 500)}";
+                    do
+                    {
+                        msg.UserIdentifier = yourName ?? $"Anonyms {rand.Next(100, 5000)}";
+                    }
+                    while (context.Inbox.Any(x => x.UserUniqueId == userUniqueId && x.UserIdentifier == msg.UserIdentifier));
+                }
+                else if(isReply)
+                {
+                    msg.UserIdentifier = context.Inbox.FirstOrDefault(x => x.UserUniqueId == userUniqueId && x.MessageGroupUniqueGuid.ToString() == messageGroupUniqueId)?.UserIdentifier;
                 }
 
                 context.Inbox.Add(msg);
@@ -304,6 +312,60 @@ namespace WebApi1.Controllers
         }
 
 
+        public ServiceResponse<string> ClearInbox(string messageGroupUniqueId)
+        {
+            var context = this.services.GetService(typeof(WebApiDBContext)) as WebApiDBContext;
+            var userMessage = context.UserMessage.FirstOrDefault(x => x.MessageGroupUniqueGuid.ToString() == messageGroupUniqueId);
+            if (userMessage == null)
+            {
+                return new ServiceResponse<string> { Status = "bad", Message = "No Such Message Group Exists!" };
+            }
+
+            if (HttpContext.GetUserUniqueID() == userMessage.UserUniqueId)
+            {
+                var messageToDelete = context.Inbox.Where(x => !x.IsDeleted && x.UserUniqueId == userMessage.UserUniqueId && x.MessageGroupUniqueGuid.ToString() == messageGroupUniqueId);
+                foreach (var item in messageToDelete)
+                {
+                    item.IsRead = true;
+                    item.IsDeleted = true;
+                }
+
+                context.SaveChanges();
+                return new ServiceResponse<string> { Status = "good", Data = messageGroupUniqueId };
+            }
+            else
+            {
+                return new ServiceResponse<string> { Status = "bad", Message = "You Cant perform this action." };
+            }
+        }
+
+        public ServiceResponse<string> ClearReply(string messageGroupUniqueId)
+        {
+            var context = this.services.GetService(typeof(WebApiDBContext)) as WebApiDBContext;
+            var userReply = context.UserReply.FirstOrDefault(x => x.MessageGroupUniqueGuid.ToString() == messageGroupUniqueId);
+            if (userReply == null)
+            {
+                return new ServiceResponse<string> { Status = "bad", Message = "No Such Message Group Exists!" };
+            }
+
+            if (HttpContext.GetUserUniqueID() == userReply.UserUniqueId)
+            {
+                var messageToDelete = context.Reply.Where(x => !x.IsDeleted && x.UserUniqueId == userReply.UserUniqueId && x.MessageGroupUniqueGuid.ToString() == messageGroupUniqueId);
+                foreach (var item in messageToDelete)
+                {
+                    item.IsRead = true;
+                    item.IsDeleted = true;
+                }
+
+                context.SaveChanges();
+                return new ServiceResponse<string> { Status = "good", Data = messageGroupUniqueId };
+            }
+            else
+            {
+                return new ServiceResponse<string> { Status = "bad", Message = "You Cant perform this action." };
+            }
+        }
+
         public ServiceResponse<string> MarkInboxAsFav(string messageGroupUniqueId)
         {
             string userUniqueId = HttpContext.GetUserUniqueID();
@@ -389,7 +451,7 @@ namespace WebApi1.Controllers
             var userId = HttpContext.GetUserUniqueID();
             var data = context.Inbox.Where(x => x.UserUniqueId == userId && x.IsMyMessage == false && x.IsRead == false).GroupBy(x=>x.MessageGroupUniqueGuid).ToList();
             List<Tuple<string, int, string>> result = new List<Tuple<string, int, string>>();
-            data.ForEach(x => result.Add(new Tuple<string, int, string>(x.Key.ToString(), x.Count(), x.Any(y => !y.IsRead) ? x.First(y => !y.IsRead).Message : x.Last().Message)));
+            data.ForEach(x => result.Add(new Tuple<string, int, string>(x.Key.ToString(), x.Count(y=>!y.IsDeleted), x.Any(y => !y.IsRead) ? x.First(y => !y.IsRead).Message : x.Last().Message)));
             return new ServiceResponse<List<Tuple<string, int,string>>> { Status = "good", Data = result };
         }
 
@@ -399,7 +461,7 @@ namespace WebApi1.Controllers
             var userId = HttpContext.GetUserUniqueID();
             var data = context.Reply.Where(x => x.UserUniqueId == userId && x.IsMyMessage == false && x.IsRead == false).GroupBy(x => x.MessageGroupUniqueGuid).ToList();
             List<Tuple<string, int,string>> result = new List<Tuple<string, int,string>>();
-            data.ForEach(x => result.Add(new Tuple<string, int,string>(x.Key.ToString(), x.Count(),x.Any(y=>!y.IsRead) ? x.First(y=>!y.IsRead).Message :  x.Last().Message)));
+            data.ForEach(x => result.Add(new Tuple<string, int,string>(x.Key.ToString(), x.Count(y => !y.IsDeleted),x.Any(y=>!y.IsRead) ? x.First(y=>!y.IsRead).Message :  x.Last().Message)));
             return new ServiceResponse<List<Tuple<string, int,string>>> { Status = "good", Data = result };
         }
 

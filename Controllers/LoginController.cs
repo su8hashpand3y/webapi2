@@ -147,13 +147,16 @@ namespace WebApi1.Controllers
                 {
                     var context = this.services.GetService(typeof(WebApiDBContext)) as WebApiDBContext;
                     var user = context.User.FirstOrDefault(x => x.UserUniqueId == model.UserUniqueId);
-                        var hasher = new PasswordHasher<User>();
+                if(user == null)
+                {
+                    return Ok(new ServiceResponse<string> { Status = "bad", Message = "User Not Found" });
+                }
+                var hasher = new PasswordHasher<User>();
                         var hashedPassword = hasher.HashPassword(user, model.Password);
                         user.Password = hashedPassword;
                     if (model.FavColor.Equals(user.FavColor,StringComparison.InvariantCultureIgnoreCase) 
                     && model.FavNumber.Equals(user.FavNumber, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        context.User.Add(user);
                         context.SaveChanges();
                         return this.LoginUser(new LoginViewModel { UserUniqueId = model.UserUniqueId, Password = model.Password });
                     }
