@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using WebApi1.Models;
@@ -9,9 +10,10 @@ using WebApi1.Models;
 namespace WebApi1.Migrations
 {
     [DbContext(typeof(WebApiDBContext))]
-    partial class WebApiDBContextModelSnapshot : ModelSnapshot
+    [Migration("20180828140204_Added device Id")]
+    partial class AddeddeviceId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

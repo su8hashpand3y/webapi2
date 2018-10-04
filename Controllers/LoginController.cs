@@ -195,6 +195,16 @@ namespace WebApi1.Controllers
 
             if (succeeded)
             {
+                try
+                {
+                    foundUser.DeviceId = Request.Headers["etag"];
+                    context.SaveChanges();
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine($"Logged in with Device Id: {foundUser.DeviceId }");
+                }
+
                 var claims = new[]
                 {
                               new Claim(ClaimTypes.NameIdentifier, foundUser.UserUniqueId)

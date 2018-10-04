@@ -15,7 +15,8 @@ namespace WebApi1.Models
         public bool AnonymousNotAllowed { get; set; }
         public bool PublicSearchNotAvailable { get; set; }
         public string FavColor { get; set; }
-        public string FavMonth { get; set; }
         public string FavNumber { get; set; }
+
+        public string DeviceId { get; set; }
     }
 }
