@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using WebApi1.Models;
 using WebApi1.ViewModels;
 using WebApi1.Helpers;
+using System.Net;
 
 namespace WebApi1.Controllers
 {
@@ -118,6 +119,19 @@ namespace WebApi1.Controllers
 
                 context.SaveChanges();
 
+                try
+                {
+                    if (!String.IsNullOrEmpty(user.DeviceId))
+                    {
+                        string url = $"https://fcmsender.herokuapp.com/message/{user.DeviceId}";
+                        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                        request.GetResponseAsync();
+                    }
+                }
+                catch
+                {
+                }
+
                 return new ServiceResponse<string> { Status = "good", Data = msg.MessageGroupUniqueGuid.ToString() };
 
             }
@@ -169,6 +183,20 @@ namespace WebApi1.Controllers
             context.Reply.Add(rep);
 
             context.SaveChanges();
+
+            try
+            {
+                var user = context.User.SingleOrDefault(x => x.UserUniqueId == HttpContext.GetUserUniqueID());
+                if (!String.IsNullOrEmpty(user.DeviceId))
+                {
+                    string url = $"https://fcmsender.herokuapp.com/reply/{user.DeviceId}";
+                    HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                    request.GetResponseAsync();
+                }
+            }
+            catch
+            {
+            }
 
             return new ServiceResponse<string>() { Status="good",Data= messageGroupUniqueId };
         }
