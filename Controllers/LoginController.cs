@@ -255,7 +255,7 @@ namespace WebApi1.Controllers
                     var context = this.services.GetService(typeof(WebApiDBContext)) as WebApiDBContext;
                     //var fullMactchUser = context.User.Where(x => x.Name == searchTerm || x.UserUniqueId == searchTerm).Skip(skip);
                     //result.AddRange(fullMactchUser.Select(x => new UserDataViewModel { Name = x.Name, UserId = x.UserUniqueId, UserImage = x.PhotoUrl }).ToList());
-                    var matchingUser = context.User.Where(x => x.Name.ToLower().Contains(searchTerm.ToLower()) || x.UserUniqueId.ToLower().Contains(searchTerm.ToLower())).Skip(skip);
+                    var matchingUser = context.User.Where(x => x.Name.ToLower().Contains(searchTerm.ToLower()) || x.UserUniqueId.ToLower().Contains(searchTerm.ToLower())).Skip(skip).Take(20);
                     result.AddRange(matchingUser.Select(x => new UserDataViewModel { Name = x.Name, UserId = x.UserUniqueId, UserImage = x.PhotoUrl }).ToList());
                 }
 
